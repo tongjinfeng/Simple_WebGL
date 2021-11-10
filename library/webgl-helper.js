@@ -85,6 +85,8 @@
        ctx.linkProgram(program);
        // 使用着色器程序
        ctx.useProgram(program);
+       // 把program 附着在context上
+       ctx.program = program;
        // 返回连接器对象
        return program;
  

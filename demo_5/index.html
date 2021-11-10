@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Texture WebGL</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #container {
+      position: absolute;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+</body>
+<script src="../library/webgl-helper.js"></script>
+<script src="../library/texture.js"></script>
+<!-- 顶点着色器资源 -->
+<script type="shader-source" id="vertexShaderSource">
+  precision mediump float;
+   attribute vec4 aPos;
+   attribute vec2 aUv;
+   varying vec2 vUv;
+
+   void main() {
+     gl_Position = aPos;
+     vUv = aUv;
+   }
+</script>
+<!-- 片元着色器资源 -->
+<script type="shader-source" id="fragmentShaderSoruce">
+  precision mediump float;
+    varying vec2 vUv;
+    uniform sampler2D texture;
+    void main() {
+      gl_FragColor = texture2D(texture, vUv);
+    }
+</script>
+<script>
+  window.onload = main;
+
+  function main() {
+    // 创建画布
+    const canvas = WebGLHelper.createWebGLCanvas('container');
+
+    // 获得WebGL的上下文
+    const ctx = WebGLHelper.getWebGLContext(canvas);
+
+    // 获得着色器对象
+    const program = WebGLHelper.initWebGLProgram(ctx, 'vertexShaderSource', 'fragmentShaderSoruce');
+
+    initVertexBuffers(ctx);
+
+    // 初始化纹理并加载
+    Texture.initTextures(ctx, program, 'texture', '../resource/elec.png', function() {
+      // 对画布进行重绘必须是在纹理图片加载完成并载入纹理对象中之后
+      ctx.clearColor(0, 0, 0, 1);
+      ctx.clear(ctx.COLOR_BUFFER_BIT);
+      ctx.drawArrays(ctx.TRIANGLE_STRIP, 0, 4);
+    });
+
+
+    /**
+     * 初始化坐标
+     * */
+    function initVertexBuffers(context) {
+      const position = new Float32Array([
+        -0.5, 0.5, 0.0, 1.0,
+        -0.5, -0.5, 0.0, 0.0,
+        0.5, 0.5, 1.0, 1.0,
+        0.5, -0.5, 1.0, 0.0,
+      ]);
+
+      const positionBuffer = context.createBuffer();
+      if (!positionBuffer) {
+        console.log('==> Failed to create the buffer object');
+        return false;
+      }
+
+      context.bindBuffer(context.ARRAY_BUFFER, positionBuffer);
+      context.bufferData(context.ARRAY_BUFFER, position, context.STATIC_DRAW);
+
+      const BYTES = position.BYTES_PER_ELEMENT;
+    
+      const aPos = context.getAttribLocation(program, 'aPos');
+      if (aPos < 0) {
+        console.log('==> Failed to get the storage location of aPos');
+        return false;
+      }
+      context.vertexAttribPointer(aPos, 2, context.FLOAT, false, BYTES * 4, 0);
+      context.enableVertexAttribArray(aPos); 
+
+      const aUv = context.getAttribLocation(program, 'aUv');
+      if (aUv < 0) {
+        console.log('==> Failed to get the storage location of aUv');
+        return false;
+      }
+     
+      context.vertexAttribPointer(aUv, 2, context.FLOAT, false, BYTES * 4, BYTES * 2);
+      context.enableVertexAttribArray(aUv); 
+
+      return true;
+    }
+
+
+  }
+</script>
+
+</html>
